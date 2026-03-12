@@ -4,6 +4,15 @@ from pygame import mouse
 import pygame
 import random
 
+#functions
+def reset_pokemon_spawn():
+    pokemon_caught = False
+    caught_time = 0
+    pokemon_x, pokemon_y =  random.randint(200,x-200), random.randint(200,y-200)     #choose random coordinates for it to spawn at
+    while (trainer_x - 100 < pokemon_x < trainer_x + 100) and (trainer_y - 100 < pokemon_y < trainer_y + 100):  #make sure it doesnt spawn on trainer
+        pokemon_x, pokemon_y = random.randint(200, x - 200), random.randint(200, y - 200)# new random position
+    pokemon_frame = random.choice(pokemon_pool)  # new random pokemon
+
 #variables
 x, y = 800, 700
 tile_width = x/2
@@ -31,6 +40,7 @@ pokeball_flip = False
 pokemon_caught = False
 throw_start = 0                            #tracks when the pokeball was thrown
 num_of_pokeball = 80
+caught_time = 0
 
 #initialisation
 pygame.init()
@@ -166,15 +176,21 @@ while True:
                 pokeball, (pokemon_x + 30, pokemon_y + 50)
             )
     if pokemon_caught:
-        # print caught notification at top of screen
+        if caught_time == 0:
+            caught_time = pygame.time.get_ticks()      #starts timer for when to fade out 'caught' notification
+
+        elapsed = pygame.time.get_ticks() - caught_time      #time elapsed where 'caught' is on screen
+        alpha = max(0, 300 - elapsed // 8)           #turns time elapsed into a computable transparency to be used on caught text and the pill behind it
+
         font = pygame.font.SysFont("couriernew", 25, bold=True)
-        text = font.render("Caught!", True, (255, 255, 100))  # text in notification
-        caught_pill = pygame.Surface((text.get_width() + 20, text.get_height() + 10),
-                                     pygame.SRCALPHA)  # notification background
+        text = font.render("Caught!", True, (255, 255, 100))
+        caught_pill = pygame.Surface((text.get_width() + 20, text.get_height() + 10), pygame.SRCALPHA)
         caught_pill.fill((0, 0, 0, 150))
+        text.set_alpha(alpha)               #sets the transparency to alpha
+        caught_pill.set_alpha(alpha)
         screen.blit(caught_pill, (400 - caught_pill.get_width() // 2, 20))
         screen.blit(text, (400 - text.get_width() // 2, 25))
-
+        reset_pokemon_spawn()
 
     #the hint (that says [space] to throw
     font = pygame.font.SysFont("couriernew",20, bold=True)        #font of hint
@@ -193,7 +209,7 @@ while True:
     pokeball_pill.fill((0,0,0, 150))                                       #pokemon colour
     screen.blit(pokeball_pill, (5,10))
     pokeball = pygame.transform.scale(pokeball, (60,60))          #enlarge pokeball a bit
-    screen.blit(pokeball,(-5,-10))
+    screen.blit(pokeball,(-5,-12))
     screen.blit(pokeball_counter, (35, 10))
     pokeball = pygame.transform.scale(pokeball, (pokeball_width, pokeball_height))     #change pokeball dimensions back
 
@@ -201,7 +217,9 @@ while True:
 
 #todo 1. get catching working ✔️
 #todo 2. add in a caught message (temporary banner) ✔️
-#todo 3. add in a pokeball counter
-#todo 4. make the 'caught' banner fade away
+#todo 3. add in a pokeball counter ✔️
+#todo 4. make the 'caught' banner fade away ✔️
 #todo 5. add in multiple spawning pokemon
-#todo 6. add in a pokedex (with shadows for undiscovered pokemon) and names of pokemon too
+#todo 6. make it so you can run over where the caught pokemon was again
+#todo 6. add in a pokedex button
+#todo 7. add in pokedex (with shadows for undiscovered pokemon) and names of pokemon too
