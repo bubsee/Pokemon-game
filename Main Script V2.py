@@ -14,6 +14,9 @@ def reset_pokemon_spawn():
         pokemon_x, pokemon_y = random.randint(200, x - 200), random.randint(200, y - 200)# new random position
     pokemon_frame = random.choice(pokemon_pool)  # new random pokemon
 
+def add_pokemon(image, x):
+    pokemon_record.append([image, pokemon_names[x], False])
+
 #variables
 x, y = 800, 700
 tile_width = x/2
@@ -40,16 +43,38 @@ pokeball_height, pokeball_width = 20,20
 pokeball_flip = False
 pokemon_caught = False
 throw_start = 0                            #tracks when the pokeball was thrown
-pokeball_count = 5
+pokeball_count = 50
 caught_time = 0
 pokedex_unlocked = False
 pokedex_open = False
 scroll_y = 0
-pokemon_names = []          #list of corresponding pokemon names
+pokemon_record = []       #format:  image, name, unlocked
+pokemon_names = [
+    # Gen 1
+    'Bulbasaur','Charmander','Squirtle',
+    # Gen 2
+    'Chikorita','Cyndaquil','Totodile',
+    # Gen 3
+    'Treecko','Torchic','Mudkip',
+    # Gen 4
+    'Turtwig','Chimchar','Piplup',
+    # Gen 5
+    'Snivy','Tepig','Oshawott',
+    # Gen 6
+    'Chespin','Fennekin','Froakie',
+    # Gen 7
+    'Rowlet','Litten','Popplio',
+    # Gen 8
+    'Grookey','Scorbunny','Sobble',
+]
+menu_open = True
+menu_refresh_ticks = 2250
+
+
 
 #initialisation
 pygame.init()
-pygame.display.set_caption('Pokemon game')
+pygame.display.set_caption('Pokémon game')
 screen = pygame.display.set_mode((x, y))
 font = pygame.font.SysFont(name="Arcade Classic", size=90)
 clock = pygame.time.Clock()               #clock for delta time
@@ -72,6 +97,7 @@ for row in range(4):
             trainer_frame_height
                                 ))
 
+
         frame = pygame.transform.scale(frame, (trainer_width, trainer_height))  #pre-scale once
         animations[direction].append(frame)
     #pokemon
@@ -86,19 +112,63 @@ for row in range(4):
         ))
         frame = pygame.transform.scale(frame, (pokemon_width, pokemon_height))  #pre-scale once
         pokemon_pool.append(frame)              #add each respective pokemon starter image to the pool
-pokemon_frame = random.choice(pokemon_pool)  # choose a random pokemon to appear (from pool)
+for i in range(len(pokemon_pool)):
+    add_pokemon(pokemon_pool[i], i)
+pokemon_frame = random.choice(pokemon_record)[0]  # choose a random pokemon to appear (from pool)
 if random.randint(0, 1):
     pokeball_flip = True
     pokemon_frame = pygame.transform.flip(pokemon_frame, True, False)  # horizontal flip only
-    #pokeball
+#pokeball
 pokeball = pygame.image.load("images/pokeball.png").convert_alpha()
 pokeball = pygame.transform.scale(pokeball, (pokeball_width, pokeball_height))
+#menu screens
+menu_1 = pygame.image.load("images/menu_1.png")
+menu_1 = pygame.transform.scale(menu_1, (x,y))
+menu_2 = pygame.image.load("images/menu_2.png")
+menu_2 = pygame.transform.scale(menu_2, (x, y))
 
 #event loop
 while True:
+    #menu screen
+    if menu_open:
+        dt = clock.tick_busy_loop(60)          #more precise than tick() — burns CPU but eliminates timer jitter
+
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+
+            if event.type == pygame.KEYDOWN:
+                menu_open = False
+
+        ticks = pygame.time.get_ticks() % menu_refresh_ticks
+        if ticks <= menu_refresh_ticks//2:
+            screen.blit(menu_1,(0,0))
+        else:
+            screen.blit(menu_2,(0,0))
+
+        font = pygame.font.SysFont("couriernew", 60, bold=True)
+        text = font.render("POKéMON:Grasslight", True, (50,150,50))
+        #pygame.draw.rect(screen, (0,0,0), (115,32,580,90))
+        screen.blit(text,(100,50))
+
+        #if you dont want a flashing 'click'
+        font = pygame.font.SysFont("couriernew", 30, bold=True)
+        text = font.render("[Click any button to continue]", True, (255, 255, 255))
+        screen.blit(text, (150, y - 100))
+
+
+        #if you want a flashing 'click'
+        '''ticks = pygame.time.get_ticks() % 900
+        if ticks <= 800:
+            font = pygame.font.SysFont("couriernew", 30, bold=True)
+            text = font.render("[Click any button to continue]", True, (255,255,255))
+            screen.blit(text, (150,y-100))'''
+
 
     #map screen
-    if pokedex_open == False:
+    elif pokedex_open == False:
         dt = clock.tick_busy_loop(60)          #more precise than tick() — burns CPU but eliminates timer jitter
 
         for event in pygame.event.get():
@@ -120,7 +190,7 @@ while True:
                         pokeball_count -= 1
 
                 if event.key == pygame.K_SPACE and pokeball_count <= 0:
-                    print('not enogh pokeballs')
+                    print('not enogh pokéballs')
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
@@ -194,6 +264,9 @@ while True:
                     pokeball, (pokemon_x + 30, pokemon_y + 50)
                 )
         if pokemon_caught:
+            for item in pokemon_record:
+                if item[0] == pokemon_frame:
+                    item[2] = True
             if caught_time == 0:
                 caught_time = pygame.time.get_ticks()      #starts timer for when to fade out 'caught' notification
             pokedex_unlocked = True
@@ -249,7 +322,7 @@ while True:
         pokeball = pygame.transform.scale(pokeball, (pokeball_width, pokeball_height))     #change pokeball dimensions back
 
         # pokdex screen
-    if pokedex_open == True:
+    elif pokedex_open == True:
         dt = clock.tick_busy_loop(60)  # more precise than tick() — burns CPU but eliminates timer jitter
 
         for event in pygame.event.get():
@@ -270,16 +343,20 @@ while True:
 
         # draw each row of pokemon
         incrementer = 0
-        for i in range(len(pokemon_pool)):
-            pokemon_image = pokemon_pool[i]
+        for i in range(len(pokemon_record)):
+            pokemon_image = pokemon_record[i][0]
             pokemon_image = pygame.transform.scale(pokemon_image, (250, 250))
             #if pokemon is not unlocked
-            pokemon_image = pokemon_image.copy()
-            pokemon_image.fill((0, 0, 0), special_flags=pygame.BLEND_RGB_MULT)
-            pokemon_name = font.render("?", True, (0,0,0))
+            if not pokemon_record[i][2]:
+                pokemon_image = pokemon_image.copy()
+                pokemon_image.fill((0, 0, 0), special_flags=pygame.BLEND_RGB_MULT)
+                pokemon_name = font.render("?", True, (0,0,0))
+                adjust = 110
 
-            '''#if pokemon is NOT unlocked
-            pokemon_name = font.render(pokemon_names[i], True, (0, 0, 0))'''
+            #if pokemon IS unlocked
+            else:
+                pokemon_name = font.render(pokemon_record[i][1], True, (0, 0, 0))
+                adjust = 10
 
             font = pygame.font.SysFont("couriernew", 40, bold=True)
             incrementer = (incrementer +1)%3
@@ -288,7 +365,7 @@ while True:
                 y_pos = i * 100 + scroll_y  # position of each letter (moves with scroll
 
             screen.blit(pokemon_image, (x_pos, y_pos))
-            screen.blit(pokemon_name, (x_pos + 115 , y_pos + 250))
+            screen.blit(pokemon_name, (x_pos + adjust, y_pos + 250))
 
         pygame.display.update()
         clock.tick(60)
