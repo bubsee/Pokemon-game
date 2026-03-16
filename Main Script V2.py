@@ -17,6 +17,10 @@ def reset_pokemon_spawn():
 def add_pokemon(image, x):
     pokemon_record.append([image, pokemon_names[x], False])
 
+def new_pokemon_screen(pokemon):
+    print(f'{pokemon[1]} unlocked!')
+
+
 #variables
 x, y = 800, 700
 tile_width = x/2
@@ -266,6 +270,7 @@ while True:
         if pokemon_caught:
             for item in pokemon_record:
                 if item[0] == pokemon_frame:
+                    new_pokemon_screen(item)
                     item[2] = True
             if caught_time == 0:
                 caught_time = pygame.time.get_ticks()      #starts timer for when to fade out 'caught' notification
@@ -337,7 +342,7 @@ while True:
 
             # mouse wheel scrolling
             if event.type == pygame.MOUSEWHEEL and (scroll_y + event.y * 20 <= 0 or scroll_y + event.y * 20 > 100):
-                scroll_y += event.y * 20  # change scroll amount
+                scroll_y += event.y * 50  # change scroll amount
 
         screen.fill((100, 30, 30))
 
@@ -362,8 +367,13 @@ while True:
             incrementer = (incrementer +1)%3
             x_pos = incrementer * 275
             if incrementer == 1:
-                y_pos = i * 100 + scroll_y  # position of each letter (moves with scroll
+                y_pos = i * 150 + scroll_y  # position of each letter (moves with scroll
 
+            gen_font = pygame.font.SysFont("couriernew", 50, bold=True)
+            gen_text = gen_font.render(f"Gen {i//3 + 1}:", True, (0,0,0))
+
+            if incrementer == 1:
+                screen.blit(gen_text, (x_pos - 230, y_pos - i))
             screen.blit(pokemon_image, (x_pos, y_pos))
             screen.blit(pokemon_name, (x_pos + adjust, y_pos + 250))
 
@@ -373,14 +383,6 @@ while True:
 
     pygame.display.flip()
 
-#todo 1. get catching working ✔️
-#todo 2. add in a caught message (temporary banner) ✔️
-#todo 3. add in a pokeball counter ✔️
-#todo 4. make the 'caught' banner fade away ✔️
-#todo 5. add in multiple spawning pokemon ✔️
-#todo 6. make it so you can run over where the caught pokemon was again ✔️
-#todo 7. add in a pokedex button ✔️
-#todo 8. add in a notification explaining the pokedex after first pokemon catch
-#todo 9. add stars around pokemon and catch animation (wiggle)
-#todo 10. add in pokedex (with shadows for undiscovered pokemon) and names of pokemon too (scrollable and sorrtred into generations) i.e gen 1 bulbasaur charizard squirtle, gen 2...
-#todo 11. add in opening screen (fades in) and a login (which tracks pokedex)
+#todo 1. notifications that pop up when a new activity is unlocked
+#todo 2. welcome message
+#todo 3. 'new pokemon!' screen
