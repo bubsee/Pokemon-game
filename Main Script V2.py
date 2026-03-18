@@ -71,7 +71,7 @@ pokemon_names = [
     # Gen 8
     'Grookey','Scorbunny','Sobble',
 ]
-menu_open = True
+menu_open = False
 menu_refresh_ticks = 2250
 
 
@@ -126,10 +126,10 @@ if random.randint(0, 1):
 pokeball = pygame.image.load("images/pokeball.png").convert_alpha()
 pokeball = pygame.transform.scale(pokeball, (pokeball_width, pokeball_height))
 #menu screens
-menu_1 = pygame.image.load("images/menu_1.png")
+'''menu_1 = pygame.image.load("images/menu_1.png")
 menu_1 = pygame.transform.scale(menu_1, (x,y))
 menu_2 = pygame.image.load("images/menu_2.png")
-menu_2 = pygame.transform.scale(menu_2, (x, y))
+menu_2 = pygame.transform.scale(menu_2, (x, y))'''
 
 #event loop
 while True:
@@ -267,11 +267,11 @@ while True:
                 screen.blit(
                     pokeball, (pokemon_x + 30, pokemon_y + 50)
                 )
-        if pokemon_caught:
+        elif pokemon_caught:
             for item in pokemon_record:
-                if item[0] == pokemon_frame:
-                    new_pokemon_screen(item)
+                if item[0] == pokemon_frame or item[0] == pygame.transform.flip(pokemon_frame, True, False):
                     item[2] = True
+                    new_pokemon_screen(item)
             if caught_time == 0:
                 caught_time = pygame.time.get_ticks()      #starts timer for when to fade out 'caught' notification
             pokedex_unlocked = True
@@ -340,9 +340,19 @@ while True:
                 if event.key == pygame.K_TAB:
                     pokedex_open = False
 
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_UP]:
+                scroll_y += 5
+                scroll_y = min(0, scroll_y)
+            if keys[pygame.K_DOWN]:
+                scroll_y -= 5
+                scroll_y = max(-2300, scroll_y)
+
             # mouse wheel scrolling
             if event.type == pygame.MOUSEWHEEL and (scroll_y + event.y * 20 <= 0 or scroll_y + event.y * 20 > 100):
                 scroll_y += event.y * 50  # change scroll amount
+                scroll_y = min(0,scroll_y)
+                scroll_y = max(-2300,scroll_y)
 
         screen.fill((100, 30, 30))
 
@@ -354,7 +364,7 @@ while True:
             #if pokemon is not unlocked
             if not pokemon_record[i][2]:
                 pokemon_image = pokemon_image.copy()
-                pokemon_image.fill((0, 0, 0), special_flags=pygame.BLEND_RGB_MULT)
+                pokemon_image.fill((0, 0, 0), special_flags=pygame.BLEND_RGB_MULT)        # make it black like a silouette
                 pokemon_name = font.render("?", True, (0,0,0))
                 adjust = 110
 
@@ -367,7 +377,7 @@ while True:
             incrementer = (incrementer +1)%3
             x_pos = incrementer * 275
             if incrementer == 1:
-                y_pos = i * 150 + scroll_y  # position of each letter (moves with scroll
+                y_pos = i * 130 + scroll_y  # position of each letter (moves with scroll
 
             gen_font = pygame.font.SysFont("couriernew", 50, bold=True)
             gen_text = gen_font.render(f"Gen {i//3 + 1}:", True, (0,0,0))
@@ -383,6 +393,11 @@ while True:
 
     pygame.display.flip()
 
-#todo 1. notifications that pop up when a new activity is unlocked
-#todo 2. welcome message
-#todo 3. 'new pokemon!' screen
+#todo 1. fix pokedex registering
+#todo 2. 'new pokemon!' screen
+#todo 3. add in tall grass instead of pokemon
+#todo 4. pokemon catch screen (slide in from sides)
+#todo 4. add moves that a pokemon can perform
+#todo 5. notifications that pop up when a new activity is unlocked
+#todo 6. add in a permanently present 'tab to exit' in top right corner in pokedex screen
+#todo 7. be able to use arrow (up and down) to navigate pokedex screen
